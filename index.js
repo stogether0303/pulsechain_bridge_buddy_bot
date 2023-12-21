@@ -161,6 +161,16 @@ app.get('/status', async (req, res) => {
     const status = JSON.parse(fs.readFileSync('./status.json', 'utf8'));
     res.json({ ...status });
 })
+app.get('/log', async (req, res) => {
+    try {
+        const logContent = fs.readFileSync('./app.log', 'utf8');
+        const logEntries = logContent.split('\n').filter(entry => entry.trim() !== '').map(JSON.parse);
+        res.json(logEntries);
+      } catch (error) {
+        console.error('Error reading or parsing the log file:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+      }    
+})
 
 app.listen(port, () => {
     console.log('Server is running at port 3000');
