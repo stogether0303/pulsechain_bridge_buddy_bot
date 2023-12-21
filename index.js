@@ -152,7 +152,7 @@ function saveStatus(receiverAddy, amount) {
 
         const data = raw_data ? JSON.parse(raw_data) : defaultStatus;
         data.wallet_funded += 1;
-        data.pls_given_away += amount * 1;
+        data.pls_given_away = data.pls_given_away * 1 +  amount * 1;
         data.balance = await getBalance(process.env.SENDER_ADDY);
 
         // Save the status
