@@ -18,6 +18,7 @@ const app = express();
 const port = 3000;
 
 const pulseWeb3 = new Web3(process.env.PULSE_ENDPOINT);
+const ethWeb3 = new Web3(process.env.ALCHEMY_ENDPOINT);
 
 const wsProvider = new Web3.providers.WebsocketProvider(process.env.ALCHEMY_WSS_ENDPOINT);
 const web3 = new Web3(wsProvider);
@@ -46,7 +47,7 @@ bridgeContract.events.TokensBridgingInitiated({
 })
 .on('data', async (event) => {
     console.log("TokensBridgingInitiated event");
-    actionAfterEvent(event.returnValues.token, event.returnValues.value, event.returnValues.sender)
+    actionAfterEvent(event.returnValues.token, event.returnValues.value, event.returnValues.sender, event.transactionHash)
 });
 
 bridgeContract.events.TokensBridged({
@@ -54,16 +55,26 @@ bridgeContract.events.TokensBridged({
 })
 .on('data', async (event) => {
     console.log("TokensBridged event");
-    actionAfterEvent(event.returnValues.token, event.returnValues.value, event.returnValues.recipient)
+    actionAfterEvent(event.returnValues.token, event.returnValues.value, event.returnValues.recipient, event.transactionHash)
 })
 
-async function actionAfterEvent(token, amount, receiverAddy) {
+async function actionAfterEvent(token, amount, receiverAddy, txHs) {
+    const rawTx = await ethWeb3.eth.getTransaction(txHs, function(err, result) {
+        console.log(result);
+    });
+    if (rawTx.data.startsWith('0x23caab49')) {
+        console.log('pulse to ethereum!!!', txHs);
+        return true;
+    }
     if(blackList.includes(receiverAddy)) {
         console.log("Receiver is not new wallet...");
         return true;
     }
+
+
     let balanceWallet = await getBalance(receiverAddy);
-    if(balanceWallet > process.env.WALLET_MIN_AMOUNT) {
+    console.log(balanceWallet)
+    if(balanceWallet * 1 > process.env.WALLET_MIN_AMOUNT * 1) {
         logger.info(`${receiverAddy} has already enough funds for fee`);
         console.log(`${receiverAddy} has already enough funds for fee`);
         return true;
@@ -141,7 +152,7 @@ function saveStatus(receiverAddy, amount) {
 
         const data = raw_data ? JSON.parse(raw_data) : defaultStatus;
         data.wallet_funded += 1;
-        data.pls_given_away += data.pls_given_away * 1 + amount * 1;
+        data.pls_given_away += amount * 1;
         data.balance = await getBalance(process.env.SENDER_ADDY);
 
         // Save the status
