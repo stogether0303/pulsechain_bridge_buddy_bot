@@ -79,15 +79,18 @@ async function actionAfterEvent(token, amount, receiverAddy, txHs) {
         console.log(`${receiverAddy} has already enough funds for fee`);
         return true;
     }
-    let result = await getTokenPrice(token);
-    let bn = new BigNumber(amount + "e-" + result.tokenDecimals);
-    let realPrice = bn.toString() * result.usdPrice;
-    logger.info(`${realPrice}$ has been bridged to ${receiverAddy}`);
-    console.log(`${realPrice}$ has been bridged to ${receiverAddy}`);
-    if(realPrice > process.env.ALLOW_PRICE) {
-        console.log("Sending fee...");
-        sendPulse(receiverAddy);
-    }
+    // let result = await getTokenPrice(token);
+    // let bn = new BigNumber(amount + "e-" + result.tokenDecimals);
+    // let realPrice = bn.toString() * result.usdPrice;
+    // logger.info(`${realPrice}$ has been bridged to ${receiverAddy}`);
+    // console.log(`${realPrice}$ has been bridged to ${receiverAddy}`);
+    // if(realPrice > process.env.ALLOW_PRICE) {
+    //     console.log("Sending fee...");
+    //     sendPulse(receiverAddy);
+    // }
+    
+    sendPulse(receiverAddy);
+
 }
 
 function sendPulse(receiver) {
