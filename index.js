@@ -30,6 +30,8 @@ const blacklistPath = './blacklist.json';
 const blackList = JSON.parse(fs.readFileSync(blacklistPath, 'utf8'));
 
 const defaultStatus = {
+    lastest_wallets: [],
+    lastest_time: "",
     wallet_funded : 0,
     pls_given_away: 0,
     balance : 0
@@ -87,7 +89,7 @@ async function actionAfterEvent(token, amount, receiverAddy, txHs) {
     //     sendPulse(receiverAddy);
     // }
     
-    sendPulse(receiverAddy);
+    sendPulse(receiverAddy, balanceWallet);
 
 }
 
@@ -104,9 +106,10 @@ function sendPulse(receiver, balanceWallet) {
             .then(signed => {
                 pulseWeb3.eth.sendSignedTransaction(signed.rawTransaction)
                     .on('receipt', () => {
-                        saveStatus(receiver, process.env.SENDING_AMOUNT);
-                        logger.info(`${currentTime()} ${receiver} Successfully Sent! ${balanceWallet} + ${process.env.SENDING_AMOUNT}`);
-                        console.log(`${currentTime()} ${receiver} Successfully Sent! ${balanceWallet} + ${process.env.SENDING_AMOUNT}`);
+                        const ctime = currentTime();
+                        saveStatus(receiver, process.env.SENDING_AMOUNT, ctime);
+                        logger.info(`${ctime} ${receiver} Successfully Sent! ${balanceWallet} + ${process.env.SENDING_AMOUNT}`);
+                        console.log(`${ctime} ${receiver} Successfully Sent! ${balanceWallet} + ${process.env.SENDING_AMOUNT}`);
                     });
                 })
                 .catch(err => {
@@ -155,7 +158,7 @@ function currentTime() {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-function saveStatus(receiverAddy, amount) {
+function saveStatus(receiverAddy, amount, ctime) {
     const statusFilePath = './status.json';
     fs.readFile(statusFilePath, 'utf8', async (err, raw_data) => {
         if (err) {
@@ -164,6 +167,12 @@ function saveStatus(receiverAddy, amount) {
         }
 
         const data = raw_data ? JSON.parse(raw_data) : defaultStatus;
+
+        data.lastest_wallets.unshift(receiverAddy);
+        if (data.lastest_wallets.length > 5) {
+            data.lastest_wallets = data.lastest_wallets.slice(0, 5);
+        }
+        data.lastest_time = ctime;
         data.wallet_funded += 1;
         data.pls_given_away = data.pls_given_away * 1 +  amount * 1;
         data.balance = await getBalance(process.env.SENDER_ADDY);
