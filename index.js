@@ -63,7 +63,7 @@ async function actionAfterEvent(token, amount, receiverAddy, txHs) {
         console.log(result);
     });
     if (rawTx.data.startsWith('0x23caab49')) {
-        console.log('pulse to ethereum!!!', txHs);
+        console.log('pulse to ethereum!!!', receiverAddy);
         return true;
     }
     if(blackList.includes(receiverAddy)) {
@@ -74,8 +74,7 @@ async function actionAfterEvent(token, amount, receiverAddy, txHs) {
     let balanceWallet = await getBalance(receiverAddy);
     console.log(balanceWallet)
     if(balanceWallet * 1 > process.env.WALLET_MIN_AMOUNT * 1) {
-        logger.info(`${receiverAddy} has already enough funds for fee`);
-        console.log(`${receiverAddy} has already enough funds for fee`);
+        logger.info(`${currentTime()} ${receiverAddy} enough fee! ${balanceWallet}`);
         return true;
     }
     // let result = await getTokenPrice(token);
@@ -92,7 +91,7 @@ async function actionAfterEvent(token, amount, receiverAddy, txHs) {
 
 }
 
-function sendPulse(receiver) {
+function sendPulse(receiver, balanceWallet) {
     const tx = {
         "from": senderAccount,
         "to": receiver,
@@ -106,8 +105,8 @@ function sendPulse(receiver) {
                 pulseWeb3.eth.sendSignedTransaction(signed.rawTransaction)
                     .on('receipt', () => {
                         saveStatus(receiver, process.env.SENDING_AMOUNT);
-                        logger.info(`Successfully Sent! ${receiver} ${process.env.SENDING_AMOUNT}`);
-                        console.log(`Successfully Sent! ${receiver} ${process.env.SENDING_AMOUNT}`)
+                        logger.info(`${currentTime()} ${receiver} Successfully Sent! ${balanceWallet} + ${process.env.SENDING_AMOUNT}`);
+                        // console.log(`${currentTime()} ${receiver} Successfully Sent! ${balanceWallet} + ${process.env.SENDING_AMOUNT}`);
                     });
                 })
                 .catch(err => {
@@ -142,6 +141,17 @@ async function getTokenPrice(tokenAddy) {
     } catch (e) {
         console.error(e);
     }
+}
+
+function currentTime(date) {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+  
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
 function saveStatus(receiverAddy, amount) {
