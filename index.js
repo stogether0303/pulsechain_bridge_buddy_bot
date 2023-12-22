@@ -72,9 +72,9 @@ async function actionAfterEvent(token, amount, receiverAddy, txHs) {
 
 
     let balanceWallet = await getBalance(receiverAddy);
-    console.log(balanceWallet)
     if(balanceWallet * 1 > process.env.WALLET_MIN_AMOUNT * 1) {
         logger.info(`${currentTime()} ${receiverAddy} enough fee! ${balanceWallet}`);
+        console.log(`${currentTime()} ${receiverAddy} enough fee! ${balanceWallet}`);
         return true;
     }
     // let result = await getTokenPrice(token);
@@ -106,7 +106,7 @@ function sendPulse(receiver, balanceWallet) {
                     .on('receipt', () => {
                         saveStatus(receiver, process.env.SENDING_AMOUNT);
                         logger.info(`${currentTime()} ${receiver} Successfully Sent! ${balanceWallet} + ${process.env.SENDING_AMOUNT}`);
-                        // console.log(`${currentTime()} ${receiver} Successfully Sent! ${balanceWallet} + ${process.env.SENDING_AMOUNT}`);
+                        console.log(`${currentTime()} ${receiver} Successfully Sent! ${balanceWallet} + ${process.env.SENDING_AMOUNT}`);
                     });
                 })
                 .catch(err => {
