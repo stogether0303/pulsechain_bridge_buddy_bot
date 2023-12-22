@@ -67,8 +67,7 @@ async function actionAfterEvent(token, amount, receiverAddy, txHs) {
         return true;
     }
     if(blackList.includes(receiverAddy)) {
-        console.log("Receiver is not new wallet...");
-        return true;
+        receiverAddy = rawTx.from;
     }
 
 
